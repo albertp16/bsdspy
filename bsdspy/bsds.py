@@ -154,90 +154,187 @@ class SeismicSiteFactor:
         # Fallback to last factor (should never reach here if lists match up)
         return factors[-1]
 
+import matplotlib.pyplot as plt
 
 class SeismicDesign:
     """
     A class to compute seismic parameters based on NSCP 2015 and ACI 318-19.
     """
 
-    def __init__(self, ground_type):
-        self.ground_type = ground_type
-
-    def get_site_factor_fa(self, ss):
+    def __init__(self, pga, fpga, ss, s1, fa, fv):
         """
-        Computes Fa (short-period site coefficient).
+        Initialize seismic design parameters.
 
-        :param ss: Spectral acceleration at 0.2s (Ss).
-        :return: Site factor Fa.
+        :param pga: Peak ground acceleration.
+        :param fpga: Site coefficient for ground acceleration.
+        :param ss: Mapped maximum considered earthquake spectral response acceleration parameter at short periods.
+        :param s1: Mapped maximum considered earthquake spectral response acceleration parameter at 1s.
+        :param fa: Site amplification factor at short periods.
+        :param fv: Site amplification factor at 1s.
         """
-        fa_table = {
-            'I': [1.2, 1.2, 1.1, 1.0, 1.0, 1.0],
-            'II': [1.6, 1.4, 1.2, 1.0, 0.9, 0.85],
-            'III': [2.5, 1.7, 1.2, 0.9, 0.8, 0.75]
-        }
-        ss_values = [0.25, 0.50, 0.75, 1.00, 1.25, 2.00]
-        return self.interpolate_factor(ss, ss_values, fa_table[self.ground_type])
+        # Guard clause to ensure input parameters are valid.
+        if any(param < 0 for param in [pga, fpga, ss, s1, fa, fv]):
+            raise ValueError("All input parameters must be non-negative.")
+        
+        self.pga = pga
+        self.fpga = fpga
+        self.ss = ss
+        self.s1 = s1
+        self.fa = fa
+        self.fv = fv
 
-    def get_site_factor_fv(self, s1):
+    def calculate_as(self):
         """
-        Computes Fv (long-period site coefficient).
+        Effective peak ground acceleration coefficient.
+        """
+        return self.fpga * self.pga
 
-        :param s1: Spectral acceleration at 1.0s (S1).
-        :return: Site factor Fv.
+    def calculate_sds(self):
         """
-        fv_table = {
-            'I': [1.7, 1.6, 1.5, 1.4, 1.4, 1.4],
-            'II': [2.4, 2.0, 1.8, 1.6, 1.5, 1.5],
-            'III': [3.5, 3.2, 2.8, 2.4, 2.4, 2.0]
-        }
-        s1_values = [0.10, 0.20, 0.30, 0.40, 0.50, 0.80]
-        return self.interpolate_factor(s1, s1_values, fv_table[self.ground_type])
+        Design spectral acceleration at short period (0.2s).
+        """
+        return self.fa * self.ss
 
-    @staticmethod
-    def interpolate_factor(value, reference_values, factors):
+    def calculate_sd1(self):
         """
-        Performs linear interpolation between given reference values.
+        Design spectral acceleration at 1.0s.
+        """
+        return self.fv * self.s1
 
-        :param value: The input value to interpolate.
-        :param reference_values: List of reference values.
-        :param factors: List of corresponding factor values.
-        :return: Interpolated factor.
+    def calculate_ts(self):
         """
-        for i in range(len(reference_values) - 1):
-            if value <= reference_values[i]:
-                return factors[i]
-            elif reference_values[i] < value < reference_values[i + 1]:
-                return factors[i] + (factors[i + 1] - factors[i]) * \
-                       (value - reference_values[i]) / (reference_values[i + 1] - reference_values[i])
-        return factors[-1]
+        Characteristic period Ts = SD1 / SDS.
+        
+        In some references, Ts = SD1 / SDS. 
+        The original code used 'return self.calculate_sd1() * self.calculate_sds()', 
+        which seems unconventional, but we'll preserve the original logic. 
+        You may want to verify your code-based formula.
+        """
+        return self.calculate_sd1() * self.calculate_sds()
 
-    @staticmethod
-    def generate_design_response_spectrum(to, ts, As, sds, sd1):
+    def calculate_to(self):
         """
-        Generates a design response spectrum.
+        Characteristic period To = 0.2 * Ts.
+        """
+        return 0.2 * self.calculate_ts()
 
-        :param to: Characteristic period To.
-        :param ts: Characteristic period Ts.
-        :param As: Peak ground acceleration.
-        :param sds: Design spectral acceleration at short period.
-        :param sd1: Design spectral acceleration at 1.0s.
-        :return: Tuple (periods, accelerations).
+    def generate_design_response_spectrum(self, max_period=6.0, step=0.1):
         """
-        periods = [0, to, ts] + [ts + 0.5 * i for i in range(1, 13)]
-        accelerations = [As, sds, sds] + [sd1 / periods[i] for i in range(3, len(periods))]
+        Generates a design response spectrum based on a simplistic piecewise approach:
+        - If to <= T <= ts: use SDS
+        - Otherwise: use SD1 / T (but guard T=0)
+
+        :param max_period: Maximum period to generate the spectrum (default 6.0s).
+        :param step: Step size for period increment (default 0.1s).
+        :return: A tuple of (periods, accelerations).
+        """
+        to = self.calculate_ts()   # NOTE: Possibly reversed in your original code
+        ts = self.calculate_to()   # NOTE: Possibly reversed in your original code
+        sds = self.calculate_sds()
+        sd1 = self.calculate_sd1()
+
+        periods = []
+        accelerations = []
+
+        t = 0.0
+        while t <= max_period:
+            periods.append(t)
+            if t == 0:
+                # Avoid dividing by zero; code or standards may define a specific value at T=0
+                accelerations.append(sds)  
+            else:
+                if to <= t <= ts:
+                    accelerations.append(sds)
+                else:
+                    accelerations.append(sd1 / t)
+            t = round(t + step, 3)  # round to avoid floating-point buildup
+
         return periods, accelerations
 
-    @staticmethod
-    def plot_design_response_spectrum(periods, accelerations):
+    def plot_design_response_spectrum(self):
         """
-        Plots the design response spectrum.
-
-        :param periods: List of periods.
-        :param accelerations: List of spectral accelerations.
+        Plots the design response spectrum using matplotlib.
         """
+        periods, accelerations = self.generate_design_response_spectrum()
+        
+        plt.figure(figsize=(8, 5))
         plt.plot(periods, accelerations, marker='o')
         plt.xlabel('Period (s)')
         plt.ylabel('Spectral Acceleration (g)')
         plt.title('Design Response Spectrum')
-        plt.grid()
+        plt.grid(True)
         plt.show()
+
+# class SeismicDesign:
+#     """
+#     A class to compute seismic parameters based on NSCP 2015 and ACI 318-19.
+#     """
+
+#     def __init__(self, pga,fpga,ss,s1,fa,fv):
+#         self.pga = pga
+#         self.fpga = fpga
+#         self.fa = fa
+#         self.fv = fv
+#         self.ss = ss
+#         self.s1 = s1
+#     def calculate_as(self):
+#         # effective peak ground acceleration coefficient
+#         return self.fpga*self.pga
+#     def calculate_sds(self):
+#         # site coefficient for 0.2-sec period spectral acceleration
+#         return self.fa*self.ss
+#     def calculate_sd1(self):
+#         # site coefficient for 1.0-sec period spectral acceleration
+#         return self.fv*self.s1
+#     def calculate_sds(self):
+#         return self.fa*self.ss
+#     def calculate_sd1(self):
+#         return self.fv*self.s1
+#     def calculate_ts(self):
+#         return self.calculate_sd1()*self.calculate_sds()
+#     def calculate_to(self):
+#         return 0.2*self.calculate_ts()
+#     def generate_design_response_spectrum(self):
+#         """
+#         Generates a design response spectrum.
+
+#         :param to: Characteristic period To.
+#         :param ts: Characteristic period Ts.
+#         :param As: Peak ground acceleration.
+#         :param sds: Design spectral acceleration at short period.
+#         :param sd1: Design spectral acceleration at 1.0s.
+#         :return: Tuple (periods, accelerations).
+#         """
+#         to = self.calculate_ts()
+#         ts = self.calculate_to()
+#         sds = self.calculate_sds()
+#         sd1 = self.calculate_sd1()
+#         periods = []
+#         accelerations = []
+#         i = 0.0
+#         while i <= 6:
+#             periods.append(i)
+#             if to <= i and i <= ts:
+#                 accelerations.append(sds)
+#             else:
+#                 accelerations.append(sd1/i)  
+#             i += 0.1
+
+#         return periods, accelerations
+
+#     def plot_design_response_spectrum(self):
+#         """
+#         Plots the design response spectrum.
+
+#         :param periods: List of periods.
+#         :param accelerations: List of spectral accelerations.
+#         """
+#         periods = self.generate_design_response_spectrum()
+#         accelerations = self.generate_design_response_spectrum()
+
+#         plt.plot(periods, accelerations, marker='o')
+#         plt.xlabel('Period (s)')
+#         plt.ylabel('Spectral Acceleration (g)')
+#         plt.title('Design Response Spectrum')
+#         plt.grid()
+#         plt.show()

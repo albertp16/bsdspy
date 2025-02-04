@@ -2,14 +2,14 @@ from setuptools import setup, find_packages
 
 setup(
     name='bsdspy',
-    version='0.1.1',
-    description='This APEC internal use only',
+    version='0.1.2',
+    description='This APEC internal use only for DPWH BSDS Standards',
     author='Albert Pamonag',
     author_email='albert@apeconsultancy.net',
     url='https://github.com/albertp16/apec-py',
     packages=find_packages(),
     install_requires=[
-        # Add required dependencies here, e.g., 'numpy', 'pandas', etc.
+        'matplotlib'
     ],
     classifiers=[
         'Programming Language :: Python :: 3',
