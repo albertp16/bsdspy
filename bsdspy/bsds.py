@@ -96,9 +96,27 @@ def get_site_factor_fv(s1, ground_type):
 
 
 pga = 0.6
-ss = 1.1 
+ss = 1.1
 s1 = 0.4
+fpga = interpolate_site_factor(pga, 'III')
+fa = get_site_factor_fa(ss, 'III')
+fv = get_site_factor_fv(s1, 'III')
+As = pga*fpga
+Sds = fa*ss
+Sd1 = fv*s1
+Ts = Sd1/Sds
+to = 0.2*Ts
 
-print(interpolate_site_factor(pga, 'III'))  # 1.0
-print(get_site_factor_fa(ss, 'III'))  # 1.0
-print(get_site_factor_fv(s1, 'III'))  # 1.4
+print("pga:", pga)
+print("fpga:", fpga)
+print("As:", As)
+print("ss:", ss)
+print("fa:", fa)
+print("Sds:", Sds)
+print("s1:", s1)
+print("fv:", fv)
+print("Sd1:", Sd1)
+print("Ts:", Ts)
+print("to:", to)
+
+
