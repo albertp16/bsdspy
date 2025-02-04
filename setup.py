@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='bsdspy',
-    version='0.1',
+    version='0.1.1',
     description='This APEC internal use only',
     author='Albert Pamonag',
     author_email='albert@apeconsultancy.net',

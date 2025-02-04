@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 
-
 class SeismicSiteFactor:
     """
     A class to compute site factors and response spectrum based on NSCP 2015 and ACI 318-19.
