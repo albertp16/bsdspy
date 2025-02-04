@@ -95,12 +95,12 @@ def get_site_factor_fv(s1, ground_type):
     return row[-1]
 
 
-pga = 0.6
-ss = 1.1
-s1 = 0.4
-fpga = interpolate_site_factor(pga, 'III')
-fa = get_site_factor_fa(ss, 'III')
-fv = get_site_factor_fv(s1, 'III')
+# pga = 0.6
+# ss = 1.1
+# s1 = 0.4
+# fpga = interpolate_site_factor(pga, 'III')
+# fa = get_site_factor_fa(ss, 'III')
+# fv = get_site_factor_fv(s1, 'III')
 
 def calculate_lvl2_egm_data(pga, ss, s1, fa, fv, fpga):
     As = pga * fpga #BSDS 2013
