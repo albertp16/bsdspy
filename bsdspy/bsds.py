@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+import panda as pd
+import ace_tools as tools
 
 def interpolate_site_factor(pga, ground_type):
     site_factors = {
@@ -132,6 +134,9 @@ def plotDesignResponseSpecturm(tm, csm):
     plt.grid()
     plt.show()
 
+def tabulateDesignSpecturm(tm,csm):
+    df = pd.DataFrame({'Period (s)': tm, 'Spectral Acceleration (g)': csm})
+    tools.display_dataframe_to_user(name="Design Response Spectrum", dataframe=df)
 
 data = calculate_lvl2_egm_data(pga, ss, s1, fa, fv, fpga)    
 to = data["To"]
@@ -143,3 +148,4 @@ sd1  = data["Sd1"]
 tm,csm = generateDesignResponseSpecturm(to,ts,As,sds,sd1)
 
 plotDesignResponseSpecturm(tm,csm)
+tabulateDesignSpecturm(tm,csm)
