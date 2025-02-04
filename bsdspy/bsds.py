@@ -100,5 +100,5 @@ ss = 1.1
 s1 = 0.4
 
 print(interpolate_site_factor(pga, 'III'))  # 1.0
-print(get_site_factor_fa(ss, 'I'))  # 1.0
-print(get_site_factor_fv(s1, 'I'))  # 1.4
+print(get_site_factor_fa(ss, 'III'))  # 1.0
+print(get_site_factor_fv(s1, 'III'))  # 1.4
