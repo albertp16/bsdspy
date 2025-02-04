@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 def interpolate_site_factor(pga, ground_type):
     site_factors = {
         'I': {"0.00":1.2, "0.10": 1.2, "0.20": 1.2, "0.30": 1.1, "0.40": 1.1, "0.50": 1.0, "0.80": 1.0},
@@ -114,20 +116,30 @@ def calculate_lvl2_egm_data(pga, ss, s1, fa, fv, fpga):
         "To": To
     }
 
-def generateDesignResponseSpecturm(to,ts,As,sds,sd1):
-    tm = [0, to, ts] + [ts + 0.5 * i for i in range(1, 13)]
-    csm = [As,sds,sds]
-    for i in range(3,13):
-        csm.append(sd1/tm[i])
-    print(tm)
-    print(csm)
-    return ""
+def generateDesignResponseSpecturm(to, ts, As, sds, sd1):
+    tm = [0, to, ts] + [ts + 0.5 * i for i in range(1, 13)]  # 15 elements
+    csm = [As, sds, sds]  # 3 elements initially
+    for i in range(len(tm) - len(csm)):  # Ensure csm matches tm
+        csm.append(sd1 / tm[i + 3])  # Adjust index
 
-# data = calculate_lvl2_egm_data(pga, ss, s1, fa, fv, fpga)    
-# to = data["To"]
-# ts = data["Ts"]
-# As = data["As"]
-# sds  = data["Sds"]
-# sd1  = data["Sd1"]
+    return tm, csm
 
-# generateDesignResponseSpecturm(to,ts,As,sds,sd1)
+def plotDesignResponseSpecturm(tm, csm):
+    plt.plot(tm, csm, marker='o')
+    plt.xlabel('Period (s)')
+    plt.ylabel('Spectral Acceleration (g)')
+    plt.title('Design Response Spectrum')
+    plt.grid()
+    plt.show()
+
+
+data = calculate_lvl2_egm_data(pga, ss, s1, fa, fv, fpga)    
+to = data["To"]
+ts = data["Ts"]
+As = data["As"]
+sds  = data["Sds"]
+sd1  = data["Sd1"]
+
+tm,csm = generateDesignResponseSpecturm(to,ts,As,sds,sd1)
+
+plotDesignResponseSpecturm(tm,csm)
