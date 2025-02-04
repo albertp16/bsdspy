@@ -1,1 +1,1 @@
-from .bsds import SeismicSiteFactor, SeismicDesign
+from .bsds import SeismicSiteFactor, SeismicDesignResponse

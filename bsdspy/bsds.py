@@ -154,9 +154,7 @@ class SeismicSiteFactor:
         # Fallback to last factor (should never reach here if lists match up)
         return factors[-1]
 
-import matplotlib.pyplot as plt
-
-class SeismicDesign:
+class SeismicDesignResponse:
     """
     A class to compute seismic parameters based on NSCP 2015 and ACI 318-19.
     """
@@ -220,34 +218,50 @@ class SeismicDesign:
 
     def generate_design_response_spectrum(self, max_period=6.0, step=0.1):
         """
-        Generates a design response spectrum based on a simplistic piecewise approach:
-        - If to <= T <= ts: use SDS
-        - Otherwise: use SD1 / T (but guard T=0)
+        Generates a design response spectrum with piecewise definition:
+        
+        - T = 0          =>  C(T) = A_s              (avoids divide-by-zero)
+        - 0 < T < T0     =>  (optional) linearly interpolate from A_s up to S_DS
+        - T0 <= T <= Ts  =>  C(T) = S_DS
+        - T  > Ts        =>  C(T) = S_D1 / T
 
-        :param max_period: Maximum period to generate the spectrum (default 6.0s).
-        :param step: Step size for period increment (default 0.1s).
-        :return: A tuple of (periods, accelerations).
+        Where:
+        T0 = 0.2 * Ts
+        Ts = S_D1 / S_DS
+        A_s = F_pga * PGA   (per the figure)
+        S_DS = F_a * S_s
+        S_D1 = F_v * S_1
         """
-        to = self.calculate_ts()   # NOTE: Possibly reversed in your original code
-        ts = self.calculate_to()   # NOTE: Possibly reversed in your original code
-        sds = self.calculate_sds()
-        sd1 = self.calculate_sd1()
+
+        # 1) Compute necessary parameters
+        A_s  = self.calculate_as()    # = F_pga * PGA
+        T_s  = self.calculate_ts()    # = S_D1 / S_DS
+        T_0  = 0.2 * T_s              # per the figure
+        S_DS = self.calculate_sds()
+        S_D1 = self.calculate_sd1()
 
         periods = []
         accelerations = []
 
+        # 2) Loop through periods
         t = 0.0
         while t <= max_period:
+
             periods.append(t)
             if t == 0:
-                # Avoid dividing by zero; code or standards may define a specific value at T=0
-                accelerations.append(sds)  
-            else:
-                if to <= t <= ts:
-                    accelerations.append(sds)
-                else:
-                    accelerations.append(sd1 / t)
-            t = round(t + step, 3)  # round to avoid floating-point buildup
+                accel = A_s
+            elif t < T_0:
+                accel = S_DS
+            
+            elif T_0 <= t <= T_s:
+                accel = S_DS
+            else: 
+                accel = S_D1 / t
+
+            accelerations.append(accel)
+            
+            # Increment time
+            t = round(t + step, 5)
 
         return periods, accelerations
 
@@ -256,85 +270,32 @@ class SeismicDesign:
         Plots the design response spectrum using matplotlib.
         """
         periods, accelerations = self.generate_design_response_spectrum()
-        
-        plt.figure(figsize=(8, 5))
-        plt.plot(periods, accelerations, marker='o')
-        plt.xlabel('Period (s)')
-        plt.ylabel('Spectral Acceleration (g)')
-        plt.title('Design Response Spectrum')
+        plt.figure()
+        plt.plot(periods, accelerations, 
+         color="blue", 
+         linestyle="--",  # dashed line
+         marker=None)     # no markers
+        plt.xlabel("Period Tm (sec)")
+        plt.ylabel("Elastic Seismic Coefficient")
+        plt.title("Design Response Spectrum")
         plt.grid(True)
-        plt.show()
+        plt.show()            
 
-# class SeismicDesign:
-#     """
-#     A class to compute seismic parameters based on NSCP 2015 and ACI 318-19.
-#     """
+pga = 0.6
+ss = 1.1
+s1 = 0.4
+site_class = 'III'
 
-#     def __init__(self, pga,fpga,ss,s1,fa,fv):
-#         self.pga = pga
-#         self.fpga = fpga
-#         self.fa = fa
-#         self.fv = fv
-#         self.ss = ss
-#         self.s1 = s1
-#     def calculate_as(self):
-#         # effective peak ground acceleration coefficient
-#         return self.fpga*self.pga
-#     def calculate_sds(self):
-#         # site coefficient for 0.2-sec period spectral acceleration
-#         return self.fa*self.ss
-#     def calculate_sd1(self):
-#         # site coefficient for 1.0-sec period spectral acceleration
-#         return self.fv*self.s1
-#     def calculate_sds(self):
-#         return self.fa*self.ss
-#     def calculate_sd1(self):
-#         return self.fv*self.s1
-#     def calculate_ts(self):
-#         return self.calculate_sd1()*self.calculate_sds()
-#     def calculate_to(self):
-#         return 0.2*self.calculate_ts()
-#     def generate_design_response_spectrum(self):
-#         """
-#         Generates a design response spectrum.
+# Instantiate the class
+seismic_site_factor = SeismicSiteFactor(site_class,pga,ss,s1)
 
-#         :param to: Characteristic period To.
-#         :param ts: Characteristic period Ts.
-#         :param As: Peak ground acceleration.
-#         :param sds: Design spectral acceleration at short period.
-#         :param sd1: Design spectral acceleration at 1.0s.
-#         :return: Tuple (periods, accelerations).
-#         """
-#         to = self.calculate_ts()
-#         ts = self.calculate_to()
-#         sds = self.calculate_sds()
-#         sd1 = self.calculate_sd1()
-#         periods = []
-#         accelerations = []
-#         i = 0.0
-#         while i <= 6:
-#             periods.append(i)
-#             if to <= i and i <= ts:
-#                 accelerations.append(sds)
-#             else:
-#                 accelerations.append(sd1/i)  
-#             i += 0.1
-
-#         return periods, accelerations
-
-#     def plot_design_response_spectrum(self):
-#         """
-#         Plots the design response spectrum.
-
-#         :param periods: List of periods.
-#         :param accelerations: List of spectral accelerations.
-#         """
-#         periods = self.generate_design_response_spectrum()
-#         accelerations = self.generate_design_response_spectrum()
-
-#         plt.plot(periods, accelerations, marker='o')
-#         plt.xlabel('Period (s)')
-#         plt.ylabel('Spectral Acceleration (g)')
-#         plt.title('Design Response Spectrum')
-#         plt.grid()
-#         plt.show()
+fpga = seismic_site_factor.interpolate_site_factor()
+fa = seismic_site_factor.get_site_factor_fa()
+fv = seismic_site_factor.get_site_factor_fv()
+seismic_design = SeismicDesignResponse(pga,fpga,ss,s1,fa,fv)
+print(seismic_design.calculate_as())
+print(seismic_design.calculate_sds())
+print(seismic_design.calculate_sd1())
+print(seismic_design.calculate_ts())
+print(seismic_design.calculate_to())
+seismic_design.plot_design_response_spectrum()
