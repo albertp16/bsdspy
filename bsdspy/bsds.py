@@ -23,7 +23,6 @@ def interpolate_site_factor(pga, ground_type):
             return lower_factor + (pga - lower_pga) * \
                    (upper_factor - lower_factor) / (upper_pga - lower_pga)
 
-
 def get_site_factor_fa(ss, ground_type):
     fa_table = {
         'I': [
@@ -67,7 +66,6 @@ def get_site_factor_fa(ss, ground_type):
 
     return table[-1]['Fa']
 
-
 def get_site_factor_fv(s1, ground_type):
     table = {
         'I':   [1.7, 1.6, 1.5, 1.4, 1.4, 1.4],
@@ -108,18 +106,28 @@ def calculate_lvl2_egm_data(pga, ss, s1, fa, fv, fpga):
     Sd1 = fv * s1
     Ts = Sd1 / Sds
     To = 0.2 * Ts
-    return fa, fv, As, Sds, Sd1, Ts, To
+    return {
+        "As": As,
+        "Sds": Sds,
+        "Sd1": Sd1,
+        "Ts": Ts,
+        "To": To
+    }
 
-# print("pga:", pga)
-# print("fpga:", fpga)
-# print("As:", As)
-# print("ss:", ss)
-# print("fa:", fa)
-# print("Sds:", Sds)
-# print("s1:", s1)
-# print("fv:", fv)
-# print("Sd1:", Sd1)
-# print("Ts:", Ts)
-# print("to:", to)
+def generateDesignResponseSpecturm(to,ts,As,sds,sd1):
+    tm = [0, to, ts] + [ts + 0.5 * i for i in range(1, 13)]
+    csm = [As,sds,sds]
+    for i in range(3,13):
+        csm.append(sd1/tm[i])
+    print(tm)
+    print(csm)
+    return ""
 
+# data = calculate_lvl2_egm_data(pga, ss, s1, fa, fv, fpga)    
+# to = data["To"]
+# ts = data["Ts"]
+# As = data["As"]
+# sds  = data["Sds"]
+# sd1  = data["Sd1"]
 
+# generateDesignResponseSpecturm(to,ts,As,sds,sd1)
