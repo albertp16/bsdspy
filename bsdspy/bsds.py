@@ -219,52 +219,59 @@ class SeismicDesignResponse:
     def generate_design_response_spectrum(self, max_period=6.0, step=0.1):
         """
         Generates a design response spectrum with piecewise definition:
-        
+
         - T = 0          =>  C(T) = A_s              (avoids divide-by-zero)
         - 0 < T < T0     =>  (optional) linearly interpolate from A_s up to S_DS
-        - T0 <= T <= Ts  =>  C(T) = S_DS
-        - T  > Ts        =>  C(T) = S_D1 / T
+        - T0 <= T <= 1   =>  C(T) = S_DS
+        - T  > 1         =>  C(T) = S_D1 / T
 
         Where:
-        T0 = 0.2 * Ts
-        Ts = S_D1 / S_DS
-        A_s = F_pga * PGA   (per the figure)
+        T0 = 0.2 * Ts       # if you want a ramp before the plateau
+        A_s = F_pga * PGA
         S_DS = F_a * S_s
         S_D1 = F_v * S_1
         """
 
         # 1) Compute necessary parameters
-        A_s  = self.calculate_as()    # = F_pga * PGA
-        T_s  = self.calculate_ts()    # = S_D1 / S_DS
-        T_0  = 0.2 * T_s              # per the figure
+        A_s  = self.calculate_as()    
         S_DS = self.calculate_sds()
         S_D1 = self.calculate_sd1()
+
+        # We might still compute T_s and T_0 if needed, but we won't use T_s for 
+        # the decay branch anymore (since user wants it to start at T=1).
+        T_s  = self.calculate_ts()     # Usually = S_D1 / S_DS
+        T_0  = 0.2 * T_s               # If you want to ramp from T=0 to T_0
 
         periods = []
         accelerations = []
 
-        # 2) Loop through periods
         t = 0.0
         while t <= max_period:
-
             periods.append(t)
+
             if t == 0:
+                #  Avoid divide-by-zero
                 accel = A_s
-            elif t < T_0:
+
+            elif 0 < t < T_0:
+                # Optional: linear ramp from A_s (at t=0) up to S_DS (at t=T_0).
+                # If you don't want a ramp, just use accel = S_DS
+                slope = (S_DS - A_s) / T_0
+                accel = A_s + slope * t
+
+            elif T_0 <= t <= 1.0:
+                # Plateau at S_DS up to T=1.0
                 accel = S_DS
-            
-            elif T_0 <= t <= T_s:
-                accel = S_DS
-            else: 
+
+            else:
+                # For T>1, switch to the decaying branch
                 accel = S_D1 / t
 
             accelerations.append(accel)
-            
-            # Increment time
+
             t = round(t + step, 5)
 
         return periods, accelerations
-
     def plot_design_response_spectrum(self):
         """
         Plots the design response spectrum using matplotlib.
