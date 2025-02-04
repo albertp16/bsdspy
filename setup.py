@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='bsdspy',
-    version='0.1.2',
+    version='0.1.5',
     description='This APEC internal use only for DPWH BSDS Standards',
     author='Albert Pamonag',
     author_email='albert@apeconsultancy.net',

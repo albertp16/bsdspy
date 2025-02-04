@@ -287,22 +287,3 @@ class SeismicDesignResponse:
         plt.title("Design Response Spectrum")
         plt.grid(True)
         plt.show()            
-
-pga = 0.6
-ss = 1.1
-s1 = 0.4
-site_class = 'III'
-
-# Instantiate the class
-seismic_site_factor = SeismicSiteFactor(site_class,pga,ss,s1)
-
-fpga = seismic_site_factor.interpolate_site_factor()
-fa = seismic_site_factor.get_site_factor_fa()
-fv = seismic_site_factor.get_site_factor_fv()
-seismic_design = SeismicDesignResponse(pga,fpga,ss,s1,fa,fv)
-print(seismic_design.calculate_as())
-print(seismic_design.calculate_sds())
-print(seismic_design.calculate_sd1())
-print(seismic_design.calculate_ts())
-print(seismic_design.calculate_to())
-seismic_design.plot_design_response_spectrum()
