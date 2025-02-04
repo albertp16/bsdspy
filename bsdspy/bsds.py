@@ -101,22 +101,25 @@ s1 = 0.4
 fpga = interpolate_site_factor(pga, 'III')
 fa = get_site_factor_fa(ss, 'III')
 fv = get_site_factor_fv(s1, 'III')
-As = pga*fpga
-Sds = fa*ss
-Sd1 = fv*s1
-Ts = Sd1/Sds
-to = 0.2*Ts
 
-print("pga:", pga)
-print("fpga:", fpga)
-print("As:", As)
-print("ss:", ss)
-print("fa:", fa)
-print("Sds:", Sds)
-print("s1:", s1)
-print("fv:", fv)
-print("Sd1:", Sd1)
-print("Ts:", Ts)
-print("to:", to)
+def calculate_lvl2_egm_data(pga, ss, s1, fa, fv, fpga):
+    As = pga * fpga #BSDS 2013
+    Sds = fa * ss
+    Sd1 = fv * s1
+    Ts = Sd1 / Sds
+    To = 0.2 * Ts
+    return fa, fv, As, Sds, Sd1, Ts, To
+
+# print("pga:", pga)
+# print("fpga:", fpga)
+# print("As:", As)
+# print("ss:", ss)
+# print("fa:", fa)
+# print("Sds:", Sds)
+# print("s1:", s1)
+# print("fv:", fv)
+# print("Sd1:", Sd1)
+# print("Ts:", Ts)
+# print("to:", to)
 
 
