@@ -208,7 +208,7 @@ class SeismicDesignResponse:
         which seems unconventional, but we'll preserve the original logic. 
         You may want to verify your code-based formula.
         """
-        return self.calculate_sd1() * self.calculate_sds()
+        return self.calculate_sd1() / self.calculate_sds()
 
     def calculate_to(self):
         """
