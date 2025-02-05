@@ -43,7 +43,7 @@ class SeismicSiteFactor:
         self.ss = ss
         self.s1 = s1
 
-        # Dictionary of site factors keyed by ground type
+        # Dictionary of site factors keyed by ground type (Joyce Edit)
         self.site_factors = {
             'I': {"0.00": 1.2, "0.10": 1.2, "0.20": 1.2, "0.30": 1.1, "0.40": 1.1, "0.50": 1.0, "0.80": 1.0},
             'II': {"0.00": 1.6, "0.10": 1.6, "0.20": 1.4, "0.30": 1.2, "0.40": 1.0, "0.50": 0.9, "0.80": 0.85},
