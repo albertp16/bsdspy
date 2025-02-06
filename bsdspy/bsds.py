@@ -216,7 +216,7 @@ class SeismicDesignResponse:
         """
         return 0.2 * self.calculate_ts()
 
-    def generate_design_response_spectrum(self, max_period=6.0, step=0.1):
+    def generate_design_response_spectrum(self, max_period=10.0, step=0.1):
         """
         Generates a design response spectrum with piecewise definition:
 
