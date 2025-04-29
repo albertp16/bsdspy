@@ -1,30 +1,58 @@
+# classify_ground_type.py
+
+"""
+MIT License
+
+Copyright (c) 2025 [Your Name]
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
+and associated documentation files (the "Software"), to deal in the Software without restriction, 
+including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, 
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies 
+or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE 
+AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+---
+
+Ground Type Classification Tool
+================================
+This script computes the ground characteristic value TG for seismic site classification 
+based on cumulative layer properties, and classifies the ground type according to standards.
+
+Reference Formula:
+    TG = 4 * Σ(H/Vs)
+
+Ground Type Classification:
+    - Type I  : TG < 0.2
+    - Type II : 0.2 ≤ TG < 0.6
+    - Type III: 0.6 ≤ TG
+"""
+
 def classify_ground_type_table(data=None):
     """
     Classifies ground type per cumulative layer and builds a detailed table.
-    
-    Formula:
-        TG = 4 * sum(H/Vs)
-
-    Ground Type Classification:
-        - Type I  : TG < 0.2
-        - Type II : 0.2 ≤ TG < 0.6
-        - Type III: 0.6 ≤ TG
 
     Parameters:
-        data (list of lists, optional): Each sublist contains [H (m), Vs (m/s)].
-            Example:
-            [
-                [4, 281.25],
-                [2, 290],
-                [15, 301],
-                ...
-            ]
+    ----------
+    data : list of lists, optional
+        Input data, each sublist containing [H (m), Vs (m/s)].
+        If None, default example data is used.
 
     Returns:
-        list of lists: Table with columns [H, Vs, H/V, TG, Ground Type].
+    -------
+    list of lists
+        Table where each row contains [H, Vs, H/V, TG, Ground Type].
     """
     if data is None:
-        # Default sample data if none provided
+        # Default example dataset
         data = [
             [4, 281.25],
             [2, 290],
@@ -41,7 +69,7 @@ def classify_ground_type_table(data=None):
         ]
 
     table = []
-    cumulative_sum = 0
+    cumulative_sum = 0.0
 
     for H, Vs in data:
         if Vs == 0:
@@ -52,7 +80,7 @@ def classify_ground_type_table(data=None):
 
         Tg = 4 * cumulative_sum
 
-        # Determine ground type
+        # Ground Type Classification
         if Tg < 0.2:
             ground_type = "Type I"
         elif 0.2 <= Tg < 0.6:
@@ -66,9 +94,10 @@ def classify_ground_type_table(data=None):
 
 
 if __name__ == "__main__":
-    # Example usage if run directly
+    # Example usage: Run as standalone script
     result_table = classify_ground_type_table()
 
+    # Table headers
     print(f"{'H':>3} {'Vs':>10} {'H/V':>15} {'TG = 4*sum':>15} {'Type':>10}")
     for row in result_table:
         H, Vs, Hv, Tg, ground_type = row
