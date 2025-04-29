@@ -3,7 +3,7 @@
 """
 MIT License
 
-Copyright (c) 2025 [Your Name]
+Copyright (c) 2025 Albert Pamonag Engineering Consultancy
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -36,7 +36,7 @@ Ground Type Classification:
     - Type III: 0.6 ≤ TG
 """
 
-def classify_ground_type_table(data=None):
+def classify_ground_type(data=None):
     """
     Classifies ground type per cumulative layer and builds a detailed table.
 
@@ -95,7 +95,7 @@ def classify_ground_type_table(data=None):
 
 if __name__ == "__main__":
     # Example usage: Run as standalone script
-    result_table = classify_ground_type_table()
+    result_table = classify_ground_type()
 
     # Table headers
     print(f"{'H':>3} {'Vs':>10} {'H/V':>15} {'TG = 4*sum':>15} {'Type':>10}")
